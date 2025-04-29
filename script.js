@@ -3,12 +3,28 @@ let content = document.querySelector("#content");
 let voice = document.querySelector("#voice");
 
 function speak(text) {
+  let synth = window.speechSynthesis;
+
+  // Wait for voices to load if not already
+  if (synth.getVoices().length === 0) {
+    synth.addEventListener("voiceschanged", () => {
+      speak(text); // Retry speaking once voices are loaded
+    });
+    return; // Exit now and wait for voices to load
+  }
+
   let text_speak = new SpeechSynthesisUtterance(text);
   text_speak.rate = 1;
   text_speak.pitch = 1;
   text_speak.volume = 1;
   text_speak.lang = "en-GB";
-  window.speechSynthesis.speak(text_speak);
+
+  const voices = synth.getVoices();
+  const britishVoice = voices.find(v => v.lang === 'en-GB');
+  if (britishVoice) text_speak.voice = britishVoice;
+
+  synth.cancel(); // Stop any current speech
+  synth.speak(text_speak);
 }
 
 function wishMe() {
@@ -22,6 +38,7 @@ function wishMe() {
     speak("Good evening sir");
   }
 }
+
 window.addEventListener("load", () => {
   wishMe();
 });
@@ -34,6 +51,7 @@ if (!speechRecognition) {
   alert("Speech Recognition is not supported on this device.");
 } else {
   let recognition = new speechRecognition();
+
   recognition.onresult = (event) => {
     let currentIndex = event.resultIndex;
     let transcript = event.results[currentIndex][0].transcript;
@@ -64,6 +82,9 @@ function takeCommand(message) {
     speak("Hello sir, what can I help you with?");
   } else if (message.includes("who are you")) {
     speak("I am your virtual assistant, created by Rinkal Sir.");
+  }
+  else if (message.includes("How is Avnish")) {
+    speak("Avanish ek number ka kutta hai.");
   } else if (message.includes("open youtube")) {
     speak("Opening YouTube...");
     window.open("https://www.youtube.com/");
